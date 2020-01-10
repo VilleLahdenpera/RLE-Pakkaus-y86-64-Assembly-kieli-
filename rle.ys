@@ -1,0 +1,70 @@
+
+# Ville Lahdenperä opiskelijanumero: 2553665
+
+
+main:
+    irmovq $0x1200,%rsp    # Pinon alustus (muistiosoitteeseen 0x1200)
+    irmovq $0x1200,%rbp
+    
+    irmovq $1,%rdx  # Vakio 1
+    irmovq $0,%rbx  # Vakio 0
+    irmovq $8,%r14  # Vakio 8
+    irmovq $16,%rsi  # Vakio 16
+    irmovq $0x1000,%rdi  # Vakio 0x1000 pinossa hyppyjä varten
+    rrmovq %r10,%r13    # Tallennetaan alkuperäinen pituus
+    
+    jmp rle
+    halt
+    
+sama:
+    rrmovq %rcx,%r9     # Sijoitetaan nykyinen %rcx -> %r9
+    addq %rdx,%r11      # Lisätään samojen lukujen laskia muuttujaan 1 -> %r11
+    jmp rle
+    
+rle:
+    popq %rcx           # Popataan pinon päällimmäinen arvo %rcx rekisteriin
+    rrmovq %rcx,%r8     # Otetaan kopio %rcx:stä %r8 rekisteriin
+    subq %rdx,%r10      # Vähennetään symbolien määrä-muuttujaa yhdellä
+    subq %rbx,%r9
+    je sama
+    subq %r9,%r8        # Verrataan aiempaa %rcx:n arvoa nykyiseen. Jos yhtäsuuri -> sama.
+    je sama
+    
+    rrmovq %rsp,%r12    # Tallennetaan eteneminen pinossa
+    rrmovq %rdi,%rsp    # %rsp:n siirto (muistiosoitteeseen <- 0x1000)
+    rrmovq %rdi,%rbp
+    pushq %r11          # Siirretään merkkien määrä r11 ja merkki r9 pinoon 
+    pushq %r9
+    subq %rsi,%rdi      # Jos ei sama, tallennetaan merkki ja niiden määrä 0x1000 eteenpäin
+    
+    subq %r14,%r12
+    rrmovq %r12,%rsp    # %rsp:n siirto (muistiosoitteeseen 0x1200 ->)
+    
+    rrmovq %rbx,%r9     # Nollataan r9 ja r11
+    rrmovq %rbx,%r11
+    
+    addq %rdx,%rax      # Lasketaan pakattua kokoa
+    addq %rdx,%rax
+    
+    addq %rdx,%r10
+    subq %rbx,%r10      # Tarkistetaan onko kaikki merkit luettu
+    jne rle
+    rrmovq %rax,%r8 # Siirretään pakattu koko -> r8
+    jmp loppu
+    
+    loppu:
+        
+        addq %rdx,%rbx  # Lasketaan (1 - (pakattu koko / alkuperäinen koko)) -> rbx
+        subq %r13,%r8
+        jg loppu
+        subq %rbx,%rdx  
+        
+        rrmovq %rdx,%rax    # Siirretään rdx -> rax
+        halt        
+        
+    
+    
+
+
+.pos 0x1000
+Pino:
